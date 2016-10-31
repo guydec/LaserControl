@@ -21,10 +21,10 @@
     <ClInclude Include="__vm\.LaserControl.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Rotary encoder + button.h">
+    <ClInclude Include="Rotary encoder.txt">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Rotary encoder.h">
+    <ClInclude Include="Rotary encoder + button.txt">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

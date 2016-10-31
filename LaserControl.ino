@@ -23,7 +23,7 @@
 
 
 // ------------------------------------------------------------------------------------------------------------
-//                                                LIBRAIRIES
+//                                                LIBRARIES
 // ------------------------------------------------------------------------------------------------------------
 #include <LiquidCrystal.h>
 #include <OneWire.h>
@@ -56,26 +56,22 @@
 #define   lcdD7          17
 #define   Buzzer         18  
 
-
 // ------------------------------------------------------------------------------------------------------------
-//                                                DEFINES
+//                                                OTHER DEFINES
 // ------------------------------------------------------------------------------------------------------------
 #define DELAY_READING_TEMPERATURE 1200
 #define TEMPERATURE_ALARM 27
 #define DELAY_ACCUEIL 2500
 
-
 // ------------------------------------------------------------------------------------------------------------
-//                                              ASSIGNATIONS
+//                                              Variables
 // ------------------------------------------------------------------------------------------------------------
 OneWire oneWire(OneWireBus);
 DallasTemperature sensors(&oneWire);
 DeviceAddress DS18sensor1;
-LiquidCrystal     lcd(lcdRS, lcdEN, lcdD4, lcdD5, lcdD6, lcdD7);
+LiquidCrystal lcd(lcdRS, lcdEN, lcdD4, lcdD5, lcdD6, lcdD7);
 
-// ------------------------------------------------------------------------------------------------------------
-//                                              VARIABLES 
-// ------------------------------------------------------------------------------------------------------------
+
 const long     TIMER1_OCR1A_Setting = 16000000L / 700L;
 
 // Flags
@@ -190,7 +186,7 @@ void setup() {
 
 
   Serial.begin(9600);
-  printAlarms(DS18sensor1);
+  PrintAlarms(DS18sensor1);
 
 
 
@@ -464,7 +460,7 @@ void Beep(int Repeat) {
 
 
 
-void printAlarms(uint8_t deviceAddress[]) {
+void PrintAlarms(DeviceAddress deviceAddress) {
   char temp;
   temp = sensors.getHighAlarmTemp(deviceAddress);
   Serial.print("High Alarm: ");
