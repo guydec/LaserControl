@@ -1,0 +1,419 @@
+// ------------------------------------------------------------------------------------------------------------
+//
+//                                                 ----------------
+//                                          L A S E R   C O N T R O L L E R
+//                                                 ----------------
+//
+//
+//    Démarrage power supply par clé
+//    Contrôle de la puissance
+//    Affichage de la température du laser
+//    fonction Focus ou passe la main à la cnc
+//    Arrêt d'urgence
+// 
+//    Guy Dechamps
+//    gdechamps@hotmail.com
+//
+//
+// ------------------------------------------------------------------------------------------------------------
+#define Version "Beta"
+#define Date "10/16"
+
+
+// ------------------------------------------------------------------------------------------------------------
+//                                                LIBRAIRIES
+// ------------------------------------------------------------------------------------------------------------
+#include <Wire.h>
+#include <LiquidCrystal.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+
+// ------------------------------------------------------------------------------------------------------------
+//                                                DEFINES
+// ------------------------------------------------------------------------------------------------------------
+#define ONE_WIRE_BUS 0
+LiquidCrystal lcd(6, 7, 14, 15, 16, 17);
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+
+// ------------------------------------------------------------------------------------------------------------
+//                                              VARIABLES 
+// ------------------------------------------------------------------------------------------------------------
+const long     timer1_OCR1A_Setting = 16000000L / 700L;
+boolean        EncoderSwitch_flag;
+boolean        StartKey_flag;
+boolean        SpindleEnable_flag;
+boolean        StepperEnable_flag;
+boolean        LcdAcceuilMenu_flag = true;
+boolean        LcdStartMenu_flag = false;
+boolean        LcdStartMenuL2_flag = true;
+boolean        LcdMainMenu_flag = false;
+boolean        LcdGrblMenu_flag = false;
+boolean        KeyOn_flag = false;
+boolean        Percent_flag = false;
+boolean        Temperature_flag = false;
+boolean        Laser_flag = false;
+boolean        LaserOn_flag = true;
+boolean        LaserOff_flag = true;
+int            lastMSB = 0;
+int            lastLSB = 0;
+unsigned int   Val = 0;
+volatile int   lastEncoded = 0;
+byte           Duty = 12;
+long           Percent = 0;                                          // Percent and PercentTemp =!
+long           PercentTemp = 1;                                      // .. for the first lcd print            
+long           lastencoderValue = 0;     
+long           coder = 0;                         
+unsigned long  currentMillis;
+unsigned long  previousMillis;
+unsigned long  previousMillisTemperature;
+unsigned long  previousMillisDebounce;
+volatile long  encoderValue = 0;
+
+
+// ------------------------------------------------------------------------------------------------------------
+//                                              ASSIGNATION PIN
+// ------------------------------------------------------------------------------------------------------------
+// Digital Pin
+//             OneWire DS1820    =  0;
+int            encoderSwitch     =  1;                               // push button switch
+int            encoderPin1       =  2;                               // these pins can not be changed 
+int            encoderPin2       =  3;                               // .. 2/3 are special pins
+int            Relay             =  4;
+//             libre ...         =  5;
+//             lcd RS            =  6;
+//             lcd END           =  7;
+int            StepperEnable     =  8;
+int            StartKey          =  9;
+const          byte LaserOut     = 10;                               // Timer 1 "B" output: OC1B
+//             libre ...         = 11;
+int            SpindleEnable     = 12;
+
+// Analogic pin
+//             libre ...         = 13;
+//             lcd D4            = 14;
+//             lcd D5            = 15;
+//             lcd D6            = 16;
+//             lcd D7            = 17;
+const int      Buzzer            = 18;  
+
+
+// ------------------------------------------------------------------------------------------------------------
+//                                                 SETUP
+// ------------------------------------------------------------------------------------------------------------
+
+
+void setup()
+{     
+// pinMode INPUT   
+   pinMode(encoderSwitch, INPUT);  
+   pinMode(StartKey, INPUT);
+   pinMode(SpindleEnable, INPUT);
+   pinMode(StepperEnable, INPUT);
+   pinMode(encoderPin1, INPUT); 
+   pinMode(encoderPin2, INPUT);
+
+// pinMode OUTPUT
+   pinMode(Relay, OUTPUT);
+   pinMode(Buzzer, OUTPUT);
+   pinMode(LaserOut, OUTPUT);
+   pinMode(6, OUTPUT);   
+   pinMode(Buzzer, OUTPUT);  
+
+// digitalWrite
+   digitalWrite(Relay, HIGH);
+   digitalWrite(StartKey, HIGH);      
+   digitalWrite(encoderPin1, HIGH);                                  // turn pullup resistor on
+   digitalWrite(encoderPin2, HIGH);                                  // turn pullup resistor on
+   digitalWrite(encoderSwitch, HIGH);                                // turn pullup resistor on
+   
+// attachInterrupt   
+   attachInterrupt(0, GetEncoderValue, FALLING);                      // call updateEncoder() when any high/low changed seen
+   attachInterrupt(1, GetEncoderValue, FALLING);                      // .. on interrupt 0 (pin 2), or interrupt 1 (pin 3)      
+   
+
+// Lcd custom char
+   byte selection [8] = {
+	0b11000,
+	0b11100,
+	0b11110,
+	0b11111,
+	0b11110,
+	0b11100,
+	0b11000,
+	0b00000};
+   lcd.createChar(1, selection);
+   
+   byte degres [8] = {
+	0b01000,
+	0b10100,
+	0b01000,
+	0b00011,
+	0b00100,
+	0b00100,
+	0b00011,
+	0b00000};
+   lcd.createChar(2, degres);
+   
+// Initialisations   
+   lcd.begin(16, 2);                                              
+   sensors.begin();
+   
+// Other   
+   lcd.home(); 
+   lcd.clear();
+   currentMillis = millis();
+   previousMillis = millis();   
+}  
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------
+//                                                 LOOP
+// ------------------------------------------------------------------------------------------------------------
+void loop()
+{  
+
+
+// Lecture des entrées
+   if (digitalRead(encoderSwitch) == LOW) {
+      currentMillis = millis();
+      if ((currentMillis - previousMillisDebounce) >= 200) {          // debounce 
+         previousMillisDebounce = currentMillis;
+         EncoderSwitch_flag =! EncoderSwitch_flag;
+         LaserOn_flag = true;
+         LaserOff_flag = true;
+      }   
+   }
+
+   if (digitalRead(StartKey) == LOW) {
+      StartKey_flag = true;
+   }
+   
+   if (digitalRead(SpindleEnable) == HIGH) {
+      SpindleEnable_flag = true;
+   }
+   
+   if (digitalRead(StepperEnable) == HIGH) {               
+      StepperEnable_flag = true;
+   }
+   
+
+// Menu Acceuil   
+   if (LcdAcceuilMenu_flag == true) {
+      LcdAcceuilMenu();
+      LcdAcceuilMenu_flag = false;
+      delay(3000);
+      LcdStartMenu_flag = true;
+   }
+   
+   
+// Menu Start   
+   if (LcdStartMenu_flag == true) {
+      currentMillis = millis();
+      if ((currentMillis - previousMillis) >= 800) {
+         previousMillis = currentMillis;
+         lcdStartMenu();
+         if(StartKey_flag == true) {
+            digitalWrite(Relay, LOW);
+            LcdStartMenu_flag = false;
+            LcdMainMenu_flag = true;
+         }   
+      }
+   }    
+   
+   
+// Menu Principal   
+   if (LcdMainMenu_flag == true) {
+      LcdMainMenu();
+      LcdMainMenu_flag = false;
+      Percent_flag = true;
+      Temperature_flag = true;
+      Laser_flag = true;
+   }
+   
+  
+// Menu GRBL   
+   if (LcdGrblMenu_flag == true) {
+      LcdGrblMenu();
+   }
+   
+   
+ // Pourcentage
+   if(Percent_flag == true) {
+      Percent = encoderValue * 2;
+      if (PercentTemp != Percent) {
+         lcd.setCursor (11, 1);
+         if (Percent > 99) {
+            lcd.print ("max ");
+         }
+         else if
+            (Percent < 1) {
+            lcd.print ("min ");       
+         } 
+         else {  
+            lcd.print (Percent);
+            lcd.print (" % "); 
+         }
+         PercentTemp = Percent;   
+         previousMillisTemperature = millis();                       // éviter une lecture de température (= lent)
+      }                                                              // .. tant que l'on tourne le bouton %
+   }
+
+//Température
+   if(Temperature_flag == true) {
+      currentMillis = millis();
+      if ((currentMillis - previousMillisTemperature) >= 1200) {
+         previousMillisTemperature = currentMillis;
+         float Temperature = GetTemp(0);  
+         lcd.setCursor (11, 0);
+         lcd.print(Temperature, 1);       
+      }
+   }
+
+   
+// Laser   
+   if(Laser_flag == true) {                                          // autorise la routine
+      lcd.setCursor(6,0);
+      if(EncoderSwitch_flag == true) {
+         if(LaserOn_flag == true) {
+            Beep(2);
+            lcd.print("on ");
+            LaserOn_flag = false;
+         }
+      }
+      else {
+         if(LaserOff_flag == true) {
+            Beep(0);
+            lcd.print("off");
+            LaserOff_flag = false;
+         }   
+      }
+   }
+}   
+   
+  
+
+
+
+// ------------------------------------------------------------------------------------------------------------
+//                                                 FONCTIONS
+// ------------------------------------------------------------------------------------------------------------
+
+
+// Menu d'acceuil
+void LcdAcceuilMenu() {
+   lcd.clear();
+   lcd.setCursor (0,0);
+   lcd.print("Laser Controller");
+   lcd.setCursor(0,1);
+   lcd.print("Ver.");
+   lcd.setCursor(5,1);
+   lcd.print(Version);
+   lcd.setCursor(11,1);
+   lcd.print(Date);
+}
+
+
+// Menu Start
+void lcdStartMenu() {
+   LcdStartMenuL2_flag =! LcdStartMenuL2_flag;
+   lcd.clear();
+   lcd.setCursor(2,0);
+   lcd.print("DC power off");   
+   if(LcdStartMenuL2_flag == true) {
+      lcd.setCursor(0,1);
+      lcd.print("wait for key on");
+   }   
+}
+
+
+// Menu principal
+void LcdMainMenu() {
+   lcd.clear();
+   lcd.setCursor (0, 0);
+   lcd.print ("Laser off");   
+   lcd.setCursor (15, 0);
+   lcd.write(2);                                                        // custom character
+   lcd.setCursor (0, 1);
+   lcd.print ("Intensity ");
+}
+
+
+// Menu GRBL
+void LcdGrblMenu() {   
+}
+
+
+// DS18S20 temperature 
+float GetTemp(int sensorId) {
+  if (sensorId<0 || sensorId>1) {
+    sensorId = 0;
+  }
+   sensors.requestTemperatures();                                       // Send the command to get temperatures
+   return sensors.getTempCByIndex(sensorId);    
+}
+  
+
+// Start PWM
+void PWMstart() {
+   TCCR1A = _BV (WGM10) | _BV (WGM11) | _BV (COM1B1);                   // fast PWM, clear OC1B on compare
+   TCCR1B = _BV (WGM12) | _BV (WGM13) | _BV (CS10);                     // fast PWM, no prescaler
+   OCR1A =  timer1_OCR1A_Setting - 1;                                   // zero relative  
+}
+
+
+// STop PWM
+void PWMstop() {
+   TCCR1A = 0;                                                          // set entire TCCR1A register to 0
+   TCCR1B = 0;                                                          // same for TCCR1B
+}
+
+
+//Rotary Encoder
+void GetEncoderValue() {
+   int MSB = digitalRead(encoderPin1);                                   // MSB = most significant bit
+   int LSB = digitalRead(encoderPin2);                                   // LSB = least significant bit
+   int encoded = (MSB << 1) |LSB;                                        // converting the 2 pin value to single number
+   int sum  = (lastEncoded << 2) | encoded;                              // adding it to the previous encoded value
+   if(sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValue ++;
+   if(sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValue --;
+   lastEncoded = encoded;                                                // store this value for next time
+   if (encoderValue >= 50) {
+      encoderValue = 50;
+   }
+   else if
+      (encoderValue <= 0) {
+      encoderValue = 0;   
+   }  
+}
+  
+  
+void GetRotarySwitch() {
+   Beep(5);
+}
+
+// Beep 1200 hz  
+void Beep(int Repeat) {
+   for (int i=0; i<=Repeat; i++){
+      tone(Buzzer, 1200); 
+      delay(200);       
+      noTone(Buzzer);    
+      delay(100); 
+   }
+}
+
+
+
+
+
+ 
+// ---------------------------------------------------------------------------------------------------- END --
+
+
+
+

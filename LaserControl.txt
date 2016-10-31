@@ -1,0 +1,123 @@
+L A S E R  C O N T R O L
+========================
+
+
+ENTREES
+-------
+DS1820 thermomètre         1 pin    0
+Rotary encoder             2 pins   2, 3
+Rotary encoder switch      1 pin    1
+Spindle enable             1 pin    12
+Stepper enable             1 pin    8
+Clé                        1 pin    9
+Real time Clock            2 pins   20, 21
+
+
+
+SORTIES
+-------
+LCD 2x16                   6 pins   RS=6, E=7, D4=14, D5=15, D6=16, D7=17
+PWM laser control          1 pin    10
+Relay                      1 pin    18
+Buzzer                     1 pin    19
+
+
+
+
+Ecran 1
+-------
+Acceuil
+   lcd   
+      Laser controller
+      Version
+      Date
+   
+   delay 3 sec
+   vers écran 2
+
+   
+Ecran 2
+-------
+alimentation    
+   lcd
+        Power supply    
+      Key Off   DC Off
+   
+   relay off
+   attente de la clé
+   
+   lcd
+      ! WARNING !
+   delay
+   
+   lcd
+      ! WARNING !
+      Key On   Dc On
+   relay on
+   delay 3 sec
+   vers ecran 3
+   
+   
+Ecran 3
+-------
+   lcd masque
+      Laser         °C   
+      Intensity     %
+
+   affichage de la température   
+   
+   réglage de l'intensité    
+   mise en marche du test laser par off puis on avec la clé + Encoder Switch on
+      off l'éteint
+      push Rotary Switch l'éteint
+      exteinction automatique après x secondes
+      
+   Tant que l'on est dans cet écran, 
+   si l'on fait démarrer le soft il ne sera pas possible
+   de mettre le laser en marche avec l'entrée Spindle Enable
+      
+   Une pression sur rotary Encoder Switch passe à l'écran 4
+   
+   
+Ecran 4
+-------
+   lcd
+      Soft control
+      
+   quand signal Enable
+   lcd
+      WARNING
+      Machine running
+      
+   comptage du temps
+   affichage de la température
+   affichage sur lcd   
+      
+
+
+
+NB 
+Prévoir système d'alarme et de coupure en cas de dépassement
+de la température du laser (max = 45 °C)      
+
+
+
+
+
+
+
+
+
+   
+   
+   
+   
+   
+   
+   
+   
+   
+
+   
+   
+   
