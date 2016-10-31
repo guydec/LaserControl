@@ -62,7 +62,7 @@
 // ------------------------------------------------------------------------------------------------------------
 #define DELAY_READING_TEMPERATURE 1200
 #define TEMPERATURE_ALARM 27
-#define DELAY_ACCEUIL 2500
+#define DELAY_ACCUEIL 2500
 
 
 // ------------------------------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ boolean         EncoderSwitch_flag;
 boolean         StartKey_flag;
 boolean         SpindleEnable_flag;
 boolean         StepperEnable_flag;
-boolean         LcdAcceuilMenu_flag     = true;
+boolean         LcdAccueilMenu_flag     = true;
 boolean         LcdStartMenu_flag       = false;
 boolean         LcdStartMenuL2_flag     = true;
 boolean         LcdMainMenu_flag        = false;
@@ -149,25 +149,25 @@ void setup() {
 
 // Lcd custom char
   byte selection [8] = {
-	0b11000,
-	0b11100,
-	0b11110,
-	0b11111,
-	0b11110,
-	0b11100,
-	0b11000,
-	0b00000};
+  0b11000,
+  0b11100,
+  0b11110,
+  0b11111,
+  0b11110,
+  0b11100,
+  0b11000,
+  0b00000};
   lcd.createChar(1, selection);
   
   byte degres [8] = {
-	0b01000,
-	0b10100,
-	0b01000,
-	0b00011,
-	0b00100, 
-	0b00100,
-	0b00011,
-	0b00000};
+  0b01000,
+  0b10100,
+  0b01000,
+  0b00011,
+  0b00100, 
+  0b00100,
+  0b00011,
+  0b00000};
   lcd.createChar(2, degres);
   
   
@@ -231,10 +231,10 @@ float Temperature = 0;
   }
   
 // Menu Acceuil   
-  if (LcdAcceuilMenu_flag == true) {
-    LcdAcceuilMenu();
-    LcdAcceuilMenu_flag = false;
-    delay(DELAY_ACCEUIL);
+  if (LcdAccueilMenu_flag == true) {
+    LcdAccueilMenu();
+    LcdAccueilMenu_flag = false;
+    delay(DELAY_ACCUEIL);
     LcdStartMenu_flag = true;
   }
   
@@ -297,8 +297,8 @@ float Temperature = 0;
   
   
 //Température
-  if((Temperature_flag == true) and (RotaryInUse_flag == false)) {
-    Temperature = GetTemperature(DS18sensor1, DELAY_READING_TEMPERATURE);
+  if((Temperature_flag == true) && (RotaryInUse_flag == false)) {
+    Temperature = GetTemperature((int)DS18sensor1, DELAY_READING_TEMPERATURE);
     
    
     
@@ -346,7 +346,7 @@ float Temperature = 0;
 
 
 // Menu d'acceuil
-void LcdAcceuilMenu() {
+void LcdAccueilMenu() {
   lcd.clear();
   lcd.setCursor (0,0);
   lcd.print("Laser Controller");
