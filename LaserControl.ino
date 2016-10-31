@@ -83,19 +83,19 @@ boolean         EncoderSwitch_flag;
 boolean         StartKey_flag;
 boolean         SpindleEnable_flag;
 boolean         StepperEnable_flag;
-boolean         LcdAccueilMenu_flag     = true;
-boolean         LcdStartMenu_flag       = false;
-boolean         LcdStartMenuL2_flag     = true;
-boolean         LcdMainMenu_flag        = false;
-boolean         LcdGrblMenu_flag        = false;
-boolean         KeyOn_flag              = false;
-boolean         Percent_flag            = false;
-boolean         Temperature_flag        = false;
-boolean         Laser_flag              = false;
-boolean         LaserOn_flag            = true;
-boolean         LaserOff_flag           = true;
-boolean         RotaryInUse_flag        = false; 
-boolean         TemperatureAlarm_flag   = false;
+boolean         LcdAccueilMenu_flag = true;
+boolean         LcdStartMenu_flag = false;
+boolean         LcdStartMenuL2_flag = true;
+boolean         LcdMainMenu_flag = false;
+boolean         LcdGrblMenu_flag = false;
+boolean         KeyOn_flag = false;
+boolean         Percent_flag = false;
+boolean         Temperature_flag = false;
+boolean         Laser_flag = false;
+boolean         LaserOn_flag = true;
+boolean         LaserOff_flag = true;
+boolean         RotaryInUse_flag = false;
+boolean         TemperatureAlarm_flag = false;
 
 int             lastMSB = 0;
 int             lastLSB = 0;
@@ -104,8 +104,8 @@ volatile int    lastEncoded = 0;
 byte            Duty = 12;
 long            Percent = 0;                                        // Percent and PercentTemp =!
 long            PercentTemp = 1;                                    // .. for the first lcd print            
-long            lastencoderValue = 0;     
-long            coder = 0;      
+long            lastencoderValue = 0;
+long            coder = 0;
 unsigned long   currentMillis;
 unsigned long   previousMillis;
 unsigned long   previousMillisRotary = 0;
@@ -116,145 +116,147 @@ volatile long   encoderValue = 0;
 // ------------------------------------------------------------------------------------------------------------
 //                                                 SETUP
 // ------------------------------------------------------------------------------------------------------------
-void setup() {     
-// pinMode INPUT   
-  pinMode(encoderSwitch, INPUT);  
+void setup() {
+  // pinMode INPUT   
+  pinMode(encoderSwitch, INPUT);
   pinMode(SpindleEnable, INPUT);
   pinMode(StepperEnable, INPUT);
-  pinMode(encoderPin1, INPUT); 
+  pinMode(encoderPin1, INPUT);
   pinMode(encoderPin2, INPUT);
   pinMode(StartKey, INPUT);
   pinMode(FeedHold, INPUT);
 
-// pinMode OUTPUT
+  // pinMode OUTPUT
   pinMode(Relay, OUTPUT);
   pinMode(Buzzer, OUTPUT);
   pinMode(LaserOut, OUTPUT);
-  pinMode(6, OUTPUT);   
-  pinMode(Buzzer, OUTPUT);  
+  pinMode(6, OUTPUT);
+  pinMode(Buzzer, OUTPUT);
 
-// digitalWrite
-  digitalWrite(Relay, HIGH);   
+  // digitalWrite
+  digitalWrite(Relay, HIGH);
   digitalWrite(encoderPin1, HIGH);                                  // turn pullup resistor on
-  digitalWrite(encoderPin2, HIGH);                            
-  digitalWrite(encoderSwitch, HIGH); 
+  digitalWrite(encoderPin2, HIGH);
+  digitalWrite(encoderSwitch, HIGH);
   digitalWrite(StartKey, HIGH);
-  digitalWrite(FeedHold, HIGH);  
-  
- 
-// attachInterrupt   
+  digitalWrite(FeedHold, HIGH);
+
+
+  // attachInterrupt   
   attachInterrupt(0, GetEncoderValue, FALLING);                      // call updateEncoder() when any high/low changed seen
   attachInterrupt(1, GetEncoderValue, FALLING);                      // .. on interrupt 0 (pin 2), or interrupt 1 (pin 3)      
- 
+
 
 // Lcd custom char
-  byte selection [8] = {
-  0b11000,
-  0b11100,
-  0b11110,
-  0b11111,
-  0b11110,
-  0b11100,
-  0b11000,
-  0b00000};
+  byte selection[8] = {
+    0b11000,
+    0b11100,
+    0b11110,
+    0b11111,
+    0b11110,
+    0b11100,
+    0b11000,
+    0b00000 
+  };
   lcd.createChar(1, selection);
-  
-  byte degres [8] = {
-  0b01000,
-  0b10100,
-  0b01000,
-  0b00011,
-  0b00100, 
-  0b00100,
-  0b00011,
-  0b00000};
+
+  byte degres[8] = {
+    0b01000,
+    0b10100,
+    0b01000,
+    0b00011,
+    0b00100,
+    0b00100,
+    0b00011,
+    0b00000
+  };
   lcd.createChar(2, degres);
-  
-  
-// Initialisations   
-  lcd.begin(16, 2);       
+
+
+  // Initialisations   
+  lcd.begin(16, 2);
   sensors.begin();
   sensors.getAddress(DS18sensor1, 0);      // search for devices on the bus and assign based on an index
   sensors.setHighAlarmTemp(DS18sensor1, TEMPERATURE_ALARM);
   sensors.setResolution(10);  // 9 bits	0.5°C	93.75 ms     10 bits	0.25°C	187.5 ms     11 bits	0.125°C	375 ms     12 bits 	0.0625°C	750 ms
 
-  
+
 // Other   
-  lcd.home(); 
+  lcd.home();
   lcd.clear();
   currentMillis = millis();
-  previousMillis = millis();     
-  
-  
-  
+  previousMillis = millis();
+
+
+
   Serial.begin(9600);
   printAlarms(DS18sensor1);
-  
-  
-  
-  
-  
-}  
+
+
+
+
+
+}
 
 
 
 // ------------------------------------------------------------------------------------------------------------
 //                                                 LOOP
 // ------------------------------------------------------------------------------------------------------------
-void loop() {  
+void loop() {
 
-// Variables dont la portée est loop()
-float Temperature = 0;
+  // Variables dont la portée est loop()
+  float Temperature = 0;
 
 
-// Lecture des entrées
+  // Lecture des entrées
   if (digitalRead(encoderSwitch) == LOW) {
     currentMillis = millis();
     if ((currentMillis - previousMillisDebounce) >= 200) {          // debounce 
       previousMillisDebounce = currentMillis;
-      EncoderSwitch_flag =! EncoderSwitch_flag;
+      EncoderSwitch_flag = !EncoderSwitch_flag;
       LaserOn_flag = true;
       LaserOff_flag = true;
-    }   
+    }
   }
 
   if (digitalRead(StartKey) == LOW) {
     StartKey_flag = true;
   }
- 
+
   if (digitalRead(SpindleEnable) == HIGH) {
     SpindleEnable_flag = true;
   }
-  
-  if (digitalRead(StepperEnable) == HIGH) {               
-    StepperEnable_flag = true; 
+
+  if (digitalRead(StepperEnable) == HIGH) {
+    StepperEnable_flag = true;
   }
-  
-// Menu Acceuil   
+
+  // Menu Acceuil   
   if (LcdAccueilMenu_flag == true) {
     LcdAccueilMenu();
     LcdAccueilMenu_flag = false;
     delay(DELAY_ACCUEIL);
     LcdStartMenu_flag = true;
   }
-  
-  
-// Menu Start   
+
+
+  // Menu Start   
   if (LcdStartMenu_flag == true) {
     currentMillis = millis();
     if ((currentMillis - previousMillis) >= 800) {
       previousMillis = currentMillis;
       lcdStartMenu();
-      if(StartKey_flag == true) {
+      if (StartKey_flag == true) {
         digitalWrite(Relay, LOW);
         LcdStartMenu_flag = false;
         LcdMainMenu_flag = true;
-      }   
+      }
     }
-  }    
-  
-  
-// Menu Principal   
+  }
+
+
+  // Menu Principal   
   if (LcdMainMenu_flag == true) {
     LcdMainMenu();
     LcdMainMenu_flag = false;
@@ -262,49 +264,47 @@ float Temperature = 0;
     Temperature_flag = true;
     Laser_flag = true;
   }
-  
-  
-// Menu GRBL   
+
+
+  // Menu GRBL   
   if (LcdGrblMenu_flag == true) {
     LcdGrblMenu();
   }
-  
- 
- // Pourcentage
-  if(Percent_flag == true) {
+
+
+  // Pourcentage
+  if (Percent_flag == true) {
     Percent = encoderValue * 2;
     if (PercentTemp != Percent) {                                   // on doit afficher le %
       RotaryInUse_flag = true;                                      // on bloque la lecture de la température car rotary en fonctionnement, 
       previousMillisRotary = millis();                              // raz
-      
-      lcd.setCursor (11, 1);
+
+      lcd.setCursor(11, 1);
       if (Percent > 99) {
-        lcd.print ("max ");
+        lcd.print("max ");
+      } else if (Percent < 1) {
+        lcd.print("min ");
+      } else {
+        lcd.print(Percent);
+        lcd.print(" % ");
       }
-      else if (Percent < 1) {
-        lcd.print ("min ");       
-        } 
-      else { 
-        lcd.print (Percent);
-        lcd.print (" % "); 
-      }
-      
-      PercentTemp = Percent;   
+
+      PercentTemp = Percent;
     } else if ((millis() - previousMillisRotary) >= 1000) {         // on rend la permission d'afficher la température après un sec d'incativité du rotary
-        RotaryInUse_flag = false;
+      RotaryInUse_flag = false;
     }
   }
-  
-  
-//Température
-  if((Temperature_flag == true) && (RotaryInUse_flag == false)) {
+
+
+  //Température
+  if ((Temperature_flag == true) && (RotaryInUse_flag == false)) {
     Temperature = GetTemperature((int)DS18sensor1, DELAY_READING_TEMPERATURE);
-    
-   
-    
+
+
+
     //checkAlarm(DS18sensor1);
     //delay(2000);
-    
+
 
     //else { 
     DisplayTemperature(Temperature);
@@ -312,31 +312,30 @@ float Temperature = 0;
   }
 
 
-  
-// Laser   
-  if(Laser_flag == true) {                                          // autorise la routine
-    lcd.setCursor(6,0);
-    if(EncoderSwitch_flag == true) {
-      if(LaserOn_flag == true) {
+
+  // Laser   
+  if (Laser_flag == true) {                                          // autorise la routine
+    lcd.setCursor(6, 0);
+    if (EncoderSwitch_flag == true) {
+      if (LaserOn_flag == true) {
         Beep(2);
         lcd.print("on ");
         LaserOn_flag = false;
       }
-    }
-    else {
-      if(LaserOff_flag == true) {
+    } else {
+      if (LaserOff_flag == true) {
         Beep(0);
         lcd.print("off");
         LaserOff_flag = false;
-      }   
+      }
     }
   }
-  
-  
 
-}   
-  
-  
+
+
+}
+
+
 
 
 
@@ -348,87 +347,87 @@ float Temperature = 0;
 // Menu d'acceuil
 void LcdAccueilMenu() {
   lcd.clear();
-  lcd.setCursor (0,0);
+  lcd.setCursor(0, 0);
   lcd.print("Laser Controller");
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   lcd.print("Ver.");
-  lcd.setCursor(5,1);
+  lcd.setCursor(5, 1);
   lcd.print(Version);
-  lcd.setCursor(11,1);
+  lcd.setCursor(11, 1);
   lcd.print(Date);
 }
 
 
 // Menu Start
 void lcdStartMenu() {
-  LcdStartMenuL2_flag =! LcdStartMenuL2_flag;
+  LcdStartMenuL2_flag = !LcdStartMenuL2_flag;
   lcd.clear();
-  lcd.setCursor(2,0);
-  lcd.print("DC power off");   
-  if(LcdStartMenuL2_flag == true) {
-    lcd.setCursor(0,1);
+  lcd.setCursor(2, 0);
+  lcd.print("DC power off");
+  if (LcdStartMenuL2_flag == true) {
+    lcd.setCursor(0, 1);
     lcd.print("wait for key on");
-  }   
+  }
 }
 
 
 // Menu principal
 void LcdMainMenu() {
   lcd.clear();
-  lcd.setCursor (0, 0);
-  lcd.print ("Laser off");   
-  lcd.setCursor (15, 0);
+  lcd.setCursor(0, 0);
+  lcd.print("Laser off");
+  lcd.setCursor(15, 0);
   lcd.write(2);                                                     // custom character
-  lcd.setCursor (0, 1);
-  lcd.print ("Intensity ");
+  lcd.setCursor(0, 1);
+  lcd.print("Intensity ");
 }
 
 
 // Menu GRBL
-void LcdGrblMenu() {   
+void LcdGrblMenu() {
 }
 
 
 // DS18S20 Mesure de la température 
 float GetTemperature(int sensorId, int delayBetweenRead) {
-  if (sensorId<0 || sensorId>1) {
+  if (sensorId < 0 || sensorId>1) {
     sensorId = 0;
   }
   if (delayBetweenRead < 1000 || delayBetweenRead > 100000) {
     delayBetweenRead = 1200;
-  } 
+  }
 
   static unsigned long PreviousReadTime;
   unsigned long CurrentTime = millis();
   unsigned long DeltaTime = CurrentTime - PreviousReadTime;
-  
+
   if (DeltaTime >= delayBetweenRead) {
     PreviousReadTime = CurrentTime;
     sensors.requestTemperatures();                                  // Send the command to get temperatures
-    return sensors.getTempCByIndex(sensorId);    
+    return sensors.getTempCByIndex(sensorId);
   }
 }
 
 
 // DS18S20 Affichage de la température   
 void DisplayTemperature(float temperature) {
-  lcd.setCursor (11, 0);
+  lcd.setCursor(11, 0);
   lcd.print(temperature, 1);
 }
 
 
 // Start PWM
 void PWMstart() {
-  TCCR1A = _BV (WGM10) | _BV (WGM11) | _BV (COM1B1);                // fast PWM, clear OC1B on compare
-  TCCR1B = _BV (WGM12) | _BV (WGM13) | _BV (CS10);                  // fast PWM, no prescaler
-  OCR1A =  TIMER1_OCR1A_Setting - 1;                                // zero relative  
+  TCCR1A = _BV(WGM10) | _BV(WGM11) | _BV(COM1B1);                // fast PWM, clear OC1B on compare
+  TCCR1B = _BV(WGM12) | _BV(WGM13) | _BV(CS10);                  // fast PWM, no prescaler
+  OCR1A = TIMER1_OCR1A_Setting - 1;                                // zero relative  
 }
 
 
 // STop PWM
 void PWMstop() {
-   TCCR1A = 0;                                                      // set entire TCCR1A register to 0
-   TCCR1B = 0;                                                      // same for TCCR1B
+  TCCR1A = 0;                                                      // set entire TCCR1A register to 0
+  TCCR1B = 0;                                                      // same for TCCR1B
 }
 
 
@@ -436,67 +435,65 @@ void PWMstop() {
 void GetEncoderValue() {
   int MSB = digitalRead(encoderPin1);                               // MSB = most significant bit
   int LSB = digitalRead(encoderPin2);                               // LSB = least significant bit
-  int encoded = (MSB << 1) |LSB;                                    // converting the 2 pin value to single number
-  int sum  = (lastEncoded << 2) | encoded;                          // adding it to the previous encoded value
-  if(sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValue ++;
-  if(sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValue --;
+  int encoded = (MSB << 1) | LSB;                                    // converting the 2 pin value to single number
+  int sum = (lastEncoded << 2) | encoded;                          // adding it to the previous encoded value
+  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValue++;
+  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValue--;
   lastEncoded = encoded;                                            // store this value for next time
   if (encoderValue >= 50) {
     encoderValue = 50;
+  } else if (encoderValue <= 0) {
+    encoderValue = 0;
   }
-  else if (encoderValue <= 0) {
-    encoderValue = 0;   
-  }  
 }
-  
-  
+
+
 void GetRotarySwitch() {
   Beep(5);
 }
 
 // Beep 1200 hz  
 void Beep(int Repeat) {
-  for (int i=0; i<=Repeat; i++){
-    tone(Buzzer, 1200); 
-    delay(200);       
-    noTone(Buzzer);    
-    delay(100); 
-  } 
-}  
-  
-  
-  
+  for (int i = 0; i <= Repeat; i++) {
+    tone(Buzzer, 1200);
+    delay(200);
+    noTone(Buzzer);
+    delay(100);
+  }
+}
+
+
+
 void printAlarms(uint8_t deviceAddress[]) {
   char temp;
   temp = sensors.getHighAlarmTemp(deviceAddress);
   Serial.print("High Alarm: ");
   Serial.print(temp, DEC);
   Serial.print("C");
-}  
+}
 
 
 
 
-  
+
 void checkAlarm(DeviceAddress deviceAddress)
 {
-  if (sensors.hasAlarm(deviceAddress))
-  {
+  if (sensors.hasAlarm(deviceAddress)) {
     lcd.print("ALARM: ");
   }
 }
- 
-  
-  
 
 
 
 
-  
 
 
 
- 
+
+
+
+
+
 // ---------------------------------------------------------------------------------------------------- END --
 
 
