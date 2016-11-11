@@ -64,7 +64,7 @@
 // ------------------------------------------------------------------------------------------------------------
 //                                              Variables
 // ------------------------------------------------------------------------------------------------------------
-Thermometre Th1(PIN_ONEWIRE_BUS);
+Thermometre* Th1;
 
 LiquidCrystal lcd(lcdRS, lcdEN, lcdD4, lcdD5, lcdD6, lcdD7);
 
@@ -110,6 +110,11 @@ volatile long   encoderValue = 0;
 //                                                 SETUP
 // ------------------------------------------------------------------------------------------------------------
 void setup() {
+  Serial.begin(115200);
+  Serial.write("setup...");
+
+  Th1 = new Thermometre(PIN_ONEWIRE_BUS);
+
   // pinMode INPUT   
   pinMode(encoderSwitch, INPUT);
   pinMode(SpindleEnable, INPUT);
@@ -167,32 +172,15 @@ void setup() {
 
   // Initialisations   
   lcd.begin(16, 2);
-
-  Th1.SetResolution(12);
-
-
-
-
-        
-  // search for devices on the bus and assign based on an index
-  //sensors.setHighAlarmTemp(DS18sensor1, TEMPERATURE_ALARM);
-  
-
-
-// Other   
   lcd.home();
   lcd.clear();
+
+  Th1->SetResolution(12);
+
   currentMillis = millis();
   previousMillis = millis();
 
-
-
-  Serial.begin(9600);
-  //PrintAlarms(DS18sensor1);
-
-
-
-
+  
 
 }
 
@@ -204,7 +192,7 @@ void setup() {
 void loop() {
 
   // Variables dont la portée est loop()
-  float Temperature = 0;
+  //float Temperature = 0;
 
   // Lecture des entrées
   if (digitalRead(encoderSwitch) == LOW) {
@@ -292,20 +280,9 @@ void loop() {
     }
   }
 
-
-  //Température
-  if ((Temperature_flag == true) && (RotaryInUse_flag == false)) {
-    Temperature = Th1.ReadTemperatureAsync();
-
-
-
-    //checkAlarm(DS18sensor1);
-    //delay(2000);
-
-
-    //else { 
-    DisplayTemperature(Temperature);
-    //}
+  Th1->ReadTemperatureAsync();
+  if (Th1->DataReady & (Temperature_flag == true) && (RotaryInUse_flag == false)) {
+    DisplayTemperature(Th1->Temperature);
   }
 
 
@@ -408,8 +385,8 @@ void LcdGrblMenu() {
 
 // DS18S20 Affichage de la température   
 void DisplayTemperature(float temperature) {
-  lcd.setCursor(11, 0);
-  lcd.print(temperature, 1);
+  lcd.setCursor(10, 0);
+  lcd.print(temperature, 2);
 }
 
 

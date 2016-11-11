@@ -99,7 +99,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties arduino.upload.port="COM3" />
+      <UserProperties arduino.upload.port="COM3" VM.DebugVariablesWindow.ColumnVisibleBreakPointName="1" VM.DebugVariablesWindow.ColumnVisibleFunctionName="1" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

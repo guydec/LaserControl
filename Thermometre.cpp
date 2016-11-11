@@ -1,27 +1,31 @@
 #include "Thermometre.h"
 
 Thermometre::Thermometre() {
-  OneWireBus = new OneWire(15);
+  Serial.write("Building thermometre\n");
+  OneWireBus = new OneWire(13);
   DeviceId = 0;
   Initialize();
 }
-Thermometre::Thermometre(byte pin_oneWireBus, byte deviceId = 0) {
+Thermometre::Thermometre(byte pin_oneWireBus, byte deviceId) {
+  Serial.write("Building thermometre with params\n");
   OneWireBus = new OneWire(pin_oneWireBus);
   DeviceId = deviceId;
   Initialize();
 }
 Thermometre::~Thermometre() {
-  delete sensors;
+  delete Dallas;
   delete OneWireBus;
 }
 
 void Thermometre::Initialize() {
+  Serial.write("Initialize thermometre\n");
+  ReadingTemperature = false;
   Temperature = 0;
-  sensors = new DallasTemperature(OneWireBus);
-  sensors->begin();
+  Dallas = new DallasTemperature(OneWireBus);
+  Dallas->begin();
+  Dallas->getAddress(DS18Sensor, DeviceId);
   SetResolution(9);
-  
-  sensors->getAddress(DS18Sensor, DeviceId);
+  DataReady = false;
 }
 
 void Thermometre::SetResolution(byte resolution) {
@@ -34,15 +38,30 @@ void Thermometre::SetResolution(byte resolution) {
   // 10 bits	0.25°C	187.5 ms     
   // 11 bits	0.125°C	375 ms     
   // 12 bits 	0.0625°C	750 ms
-  sensors->setResolution(Resolution);
+  Dallas->setResolution(DS18Sensor, Resolution);
 }
 byte Thermometre::GetResolution() {
   return Resolution;
 }
 
-void Thermometre::FindDevice(byte deviceId) {
+void Thermometre::ReadTemperatureAsync() {
+  
+  if (ReadingTemperature) {
+    if (Dallas->isConversionAvailable(DS18Sensor)) {
+      Temperature = Dallas->getTempC(DS18Sensor);
+      //Serial.println(Temperature);
+      DataReady = true;
+      ReadingTemperature = false;
+    }
+    return;
+  }
 
-}
-float Thermometre::ReadTemperatureAsync() {
+  ReadingTemperature = true;
+  //Serial.write("Start read async\n");
+  Dallas->setWaitForConversion(false);
+  Dallas->setCheckForConversion(true);
+  Dallas->requestTemperaturesByAddress(DS18Sensor);
+  DataReady = false;
+  return;
 }
 

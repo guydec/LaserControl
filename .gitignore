@@ -1,6 +1,7 @@
-__vm
+__vm/
 Debug/
 
+*.suo
 *.user
 
 # Compiled Object files
