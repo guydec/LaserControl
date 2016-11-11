@@ -33,7 +33,12 @@ void Thermometre::SetResolution(byte resolution) {
     return;
   }
   Resolution = resolution;
-
+  switch (Resolution) {
+    case 9: DelayToHaveValidData = 94; break;
+    case 10: DelayToHaveValidData = 188; break;
+    case 11: DelayToHaveValidData = 375; break;
+    case 12: DelayToHaveValidData = 750; break;
+  }
   // 9 bits	0.5°C	93.75 ms     
   // 10 bits	0.25°C	187.5 ms     
   // 11 bits	0.125°C	375 ms     
@@ -45,10 +50,17 @@ byte Thermometre::GetResolution() {
 }
 
 void Thermometre::ReadTemperatureAsync() {
-  
+
   if (ReadingTemperature) {
+    if ((millis() - StartReading) < DelayToHaveValidData) {
+      return;
+    }
     if (Dallas->isConversionAvailable(DS18Sensor)) {
+      OldTemperature = Temperature;
       Temperature = Dallas->getTempC(DS18Sensor);
+      if (OldTemperature != Temperature) {
+        DataChanged = true;
+      }
       //Serial.println(Temperature);
       DataReady = true;
       ReadingTemperature = false;
@@ -61,6 +73,7 @@ void Thermometre::ReadTemperatureAsync() {
   Dallas->setWaitForConversion(false);
   Dallas->setCheckForConversion(true);
   Dallas->requestTemperaturesByAddress(DS18Sensor);
+  StartReading = millis();
   DataReady = false;
   return;
 }

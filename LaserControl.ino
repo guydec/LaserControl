@@ -281,7 +281,7 @@ void loop() {
   }
 
   Th1->ReadTemperatureAsync();
-  if (Th1->DataReady & (Temperature_flag == true) && (RotaryInUse_flag == false)) {
+  if (Th1->DataReady && Th1->DataChanged && (Temperature_flag == true)) {
     DisplayTemperature(Th1->Temperature);
   }
 

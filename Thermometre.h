@@ -12,12 +12,16 @@ private:
   byte DeviceId;
 
   bool ReadingTemperature;
+  unsigned long StartReading;
+  unsigned int DelayToHaveValidData;
+  float OldTemperature;
 
   void Initialize();
 
 public:
   float Temperature;
-  volatile bool DataReady;
+  bool DataReady;
+  bool DataChanged;
 
   Thermometre();
   Thermometre(byte pin_oneWireBus, byte deviceId = 0);
