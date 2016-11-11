@@ -26,9 +26,7 @@
 //                                                LIBRARIES
 // ------------------------------------------------------------------------------------------------------------
 #include <LiquidCrystal.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-
+#include "Thermometre.h"
 
 // ------------------------------------------------------------------------------------------------------------
 //                                            PIN ASSIGNATION
@@ -47,7 +45,7 @@
 #define   LaserOut       10                                         // Timer 1 "B" output: OC1B
 //         libre ...        11
 #define   SpindleEnable  12
-#define   OneWireBus     13
+#define   PIN_ONEWIRE_BUS 13
 
 //         ANALOGIQUE ----------
 #define   lcdD4          14
@@ -66,9 +64,8 @@
 // ------------------------------------------------------------------------------------------------------------
 //                                              Variables
 // ------------------------------------------------------------------------------------------------------------
-OneWire oneWire(OneWireBus);
-DallasTemperature sensors(&oneWire);
-DeviceAddress DS18sensor1;
+Thermometre Th1(PIN_ONEWIRE_BUS);
+
 LiquidCrystal lcd(lcdRS, lcdEN, lcdD4, lcdD5, lcdD6, lcdD7);
 
 
@@ -168,13 +165,18 @@ void setup() {
   };
   lcd.createChar(2, degres);
 
-
   // Initialisations   
   lcd.begin(16, 2);
-  sensors.begin();
-  sensors.getAddress(DS18sensor1, 0);      // search for devices on the bus and assign based on an index
+
+  Th1.SetResolution(12);
+
+
+
+
+        
+  // search for devices on the bus and assign based on an index
   sensors.setHighAlarmTemp(DS18sensor1, TEMPERATURE_ALARM);
-  sensors.setResolution(10);  // 9 bits	0.5°C	93.75 ms     10 bits	0.25°C	187.5 ms     11 bits	0.125°C	375 ms     12 bits 	0.0625°C	750 ms
+  
 
 
 // Other   
