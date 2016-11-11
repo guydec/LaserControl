@@ -1,23 +1,27 @@
 #include "Thermometre.h"
 
 Thermometre::Thermometre() {
-  oneWire = new OneWire(15);
+  OneWireBus = new OneWire(15);
+  DeviceId = 0;
   Initialize();
 }
-Thermometre::Thermometre(byte pin_oneWireBus) {
-  oneWire = new OneWire(pin_oneWireBus);
+Thermometre::Thermometre(byte pin_oneWireBus, byte deviceId = 0) {
+  OneWireBus = new OneWire(pin_oneWireBus);
+  DeviceId = deviceId;
   Initialize();
 }
 Thermometre::~Thermometre() {
   delete sensors;
-  delete oneWire;
+  delete OneWireBus;
 }
+
 void Thermometre::Initialize() {
   Temperature = 0;
-  sensors = new DallasTemperature(oneWire);
+  sensors = new DallasTemperature(OneWireBus);
   sensors->begin();
   SetResolution(9);
-  sensors->getAddress(DS18sensor, 0);
+  
+  sensors->getAddress(DS18Sensor, DeviceId);
 }
 
 void Thermometre::SetResolution(byte resolution) {
@@ -36,5 +40,9 @@ byte Thermometre::GetResolution() {
   return Resolution;
 }
 
+void Thermometre::FindDevice(byte deviceId) {
 
+}
+float Thermometre::ReadTemperatureAsync() {
+}
 

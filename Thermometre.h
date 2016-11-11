@@ -5,21 +5,24 @@
 
 class Thermometre {
 private:
-  OneWire* oneWire;
+  OneWire* OneWireBus;
   DallasTemperature* sensors;
-  DeviceAddress DS18sensor;
+  DeviceAddress DS18Sensor;
   byte Resolution;
+  byte DeviceId;
+
+  void Initialize();
 
 public:
   float Temperature;
 
   Thermometre();
-  Thermometre(byte pin_oneWireBus);
+  Thermometre(byte pin_oneWireBus, byte deviceId = 0);
   ~Thermometre();
 
-  void Initialize();
   void SetResolution(byte resolution);
   byte GetResolution();
-
+  void Thermometre::FindDevice(byte deviceId);
+  float Thermometre::ReadTemperatureAsync();
 };
 

@@ -175,7 +175,7 @@ void setup() {
 
         
   // search for devices on the bus and assign based on an index
-  sensors.setHighAlarmTemp(DS18sensor1, TEMPERATURE_ALARM);
+  //sensors.setHighAlarmTemp(DS18sensor1, TEMPERATURE_ALARM);
   
 
 
@@ -188,7 +188,7 @@ void setup() {
 
 
   Serial.begin(9600);
-  PrintAlarms(DS18sensor1);
+  //PrintAlarms(DS18sensor1);
 
 
 
@@ -205,7 +205,6 @@ void loop() {
 
   // Variables dont la portée est loop()
   float Temperature = 0;
-
 
   // Lecture des entrées
   if (digitalRead(encoderSwitch) == LOW) {
@@ -296,7 +295,7 @@ void loop() {
 
   //Température
   if ((Temperature_flag == true) && (RotaryInUse_flag == false)) {
-    Temperature = GetTemperature((int)DS18sensor1, DELAY_READING_TEMPERATURE);
+    Temperature = Th1.ReadTemperatureAsync();
 
 
 
@@ -386,25 +385,25 @@ void LcdGrblMenu() {
 }
 
 
-// DS18S20 Mesure de la température 
-float GetTemperature(int sensorId, int delayBetweenRead) {
-  if (sensorId < 0 || sensorId>1) {
-    sensorId = 0;
-  }
-  if (delayBetweenRead < 1000 || delayBetweenRead > 100000) {
-    delayBetweenRead = 1200;
-  }
-
-  static unsigned long PreviousReadTime;
-  unsigned long CurrentTime = millis();
-  unsigned long DeltaTime = CurrentTime - PreviousReadTime;
-
-  if (DeltaTime >= delayBetweenRead) {
-    PreviousReadTime = CurrentTime;
-    sensors.requestTemperatures();                                  // Send the command to get temperatures
-    return sensors.getTempCByIndex(sensorId);
-  }
-}
+//// DS18S20 Mesure de la température 
+//float GetTemperature(int sensorId, int delayBetweenRead) {
+//  if (sensorId < 0 || sensorId>1) {
+//    sensorId = 0;
+//  }
+//  if (delayBetweenRead < 1000 || delayBetweenRead > 100000) {
+//    delayBetweenRead = 1200;
+//  }
+//
+//  static unsigned long PreviousReadTime;
+//  unsigned long CurrentTime = millis();
+//  unsigned long DeltaTime = CurrentTime - PreviousReadTime;
+//
+//  if (DeltaTime >= delayBetweenRead) {
+//    PreviousReadTime = CurrentTime;
+//    sensors.requestTemperatures();                                  // Send the command to get temperatures
+//    return sensors.getTempCByIndex(sensorId);
+//  }
+//}
 
 
 // DS18S20 Affichage de la température   
@@ -463,22 +462,21 @@ void Beep(int Repeat) {
 
 
 void PrintAlarms(DeviceAddress deviceAddress) {
-  char temp;
-  temp = sensors.getHighAlarmTemp(deviceAddress);
-  Serial.print("High Alarm: ");
-  Serial.print(temp, DEC);
-  Serial.print("C");
+  //char temp;
+  //temp = sensors.getHighAlarmTemp(deviceAddress);
+  //Serial.print("High Alarm: ");
+  //Serial.print(temp, DEC);
+  //Serial.print("C");
 }
 
 
 
 
 
-void checkAlarm(DeviceAddress deviceAddress)
-{
-  if (sensors.hasAlarm(deviceAddress)) {
-    lcd.print("ALARM: ");
-  }
+void checkAlarm(DeviceAddress deviceAddress) {
+  //if (sensors.hasAlarm(deviceAddress)) {
+  //  lcd.print("ALARM: ");
+  //}
 }
 
 
