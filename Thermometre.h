@@ -4,12 +4,18 @@
 #include <DallasTemperature.h>
 
 class Thermometre {
+private:
+  OneWire* oneWire;
+  DallasTemperature* sensors;
+  DeviceAddress DS18sensor;
+  byte Resolution;
+
 public:
+  float Temperature;
+
   Thermometre();
   Thermometre(byte pin_oneWireBus);
   ~Thermometre();
-  float Temperature;
-  byte Resolution;
 
   void Initialize();
   void SetResolution(byte resolution);
