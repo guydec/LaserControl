@@ -1,5 +1,6 @@
 Debug/
 *.suo
+.vs/
 
 # Compiled Object files
 *.slo
