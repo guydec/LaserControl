@@ -27,15 +27,16 @@
 // ------------------------------------------------------------------------------------------------------------
 #include <LiquidCrystal.h>
 #include "Thermometre.h"
+#include "RotaryActuator.h"
 
 // ------------------------------------------------------------------------------------------------------------
 //                                            PIN ASSIGNATION
 // ------------------------------------------------------------------------------------------------------------
 //         DIGITAL -----------
 //         libre ...         0
-#define   encoderSwitch   1                                         // push button switch
-#define   encoderPin1     2
-#define   encoderPin2     3                                         // .. 2/3 are special pins
+#define   PIN_ENCODER_BUTTON   1                                         // push button switch
+#define   PIN_ENCODER1         2
+#define   PIN_ENCODER2         3                                         // .. 2/3 are special pins
 #define   Relay           4
 #define   FeedHold        5
 #define   lcdRS           6
@@ -57,7 +58,6 @@
 // ------------------------------------------------------------------------------------------------------------
 //                                                OTHER DEFINES
 // ------------------------------------------------------------------------------------------------------------
-#define DELAY_READING_TEMPERATURE 1200
 #define TEMPERATURE_ALARM 27
 #define DELAY_ACCUEIL 2500
 
@@ -65,6 +65,8 @@
 //                                              Variables
 // ------------------------------------------------------------------------------------------------------------
 Thermometre* Th1;
+
+RotaryActuator* Ra1;
 
 LiquidCrystal lcd(lcdRS, lcdEN, lcdD4, lcdD5, lcdD6, lcdD7);
 
@@ -114,13 +116,16 @@ void setup() {
   Serial.write("setup...");
 
   Th1 = new Thermometre(PIN_ONEWIRE_BUS);
+  Th1->SetResolution(12);
+
+  Ra1 = new RotaryActuator(PIN_ENCODER1, PIN_ENCODER2, PIN_ENCODER_BUTTON);
+  Ra1->SetMinValue(0);
+  Ra1->SetMaxValue(100);
+  Ra1->SetStep(2);
 
   // pinMode INPUT   
-  pinMode(encoderSwitch, INPUT);
   pinMode(SpindleEnable, INPUT);
   pinMode(StepperEnable, INPUT);
-  pinMode(encoderPin1, INPUT);
-  pinMode(encoderPin2, INPUT);
   pinMode(StartKey, INPUT);
   pinMode(FeedHold, INPUT);
 
@@ -133,17 +138,8 @@ void setup() {
 
   // digitalWrite
   digitalWrite(Relay, HIGH);
-  digitalWrite(encoderPin1, HIGH);                                  // turn pullup resistor on
-  digitalWrite(encoderPin2, HIGH);
-  digitalWrite(encoderSwitch, HIGH);
   digitalWrite(StartKey, HIGH);
   digitalWrite(FeedHold, HIGH);
-
-
-  // attachInterrupt   
-  attachInterrupt(0, GetEncoderValue, FALLING);                      // call updateEncoder() when any high/low changed seen
-  attachInterrupt(1, GetEncoderValue, FALLING);                      // .. on interrupt 0 (pin 2), or interrupt 1 (pin 3)      
-
 
 // Lcd custom char
   byte selection[8] = {
@@ -154,7 +150,7 @@ void setup() {
     0b11110,
     0b11100,
     0b11000,
-    0b00000 
+    0b00000
   };
   lcd.createChar(1, selection);
 
@@ -175,12 +171,10 @@ void setup() {
   lcd.home();
   lcd.clear();
 
-  Th1->SetResolution(12);
-
   currentMillis = millis();
   previousMillis = millis();
 
-  
+
 
 }
 
@@ -191,19 +185,16 @@ void setup() {
 // ------------------------------------------------------------------------------------------------------------
 void loop() {
 
-  // Variables dont la portée est loop()
-  //float Temperature = 0;
-
   // Lecture des entrées
-  if (digitalRead(encoderSwitch) == LOW) {
-    currentMillis = millis();
-    if ((currentMillis - previousMillisDebounce) >= 200) {          // debounce 
-      previousMillisDebounce = currentMillis;
-      EncoderSwitch_flag = !EncoderSwitch_flag;
-      LaserOn_flag = true;
-      LaserOff_flag = true;
-    }
-  }
+  //if (digitalRead(encoderSwitch) == LOW) {
+  //  currentMillis = millis();
+  //  if ((currentMillis - previousMillisDebounce) >= 200) {          // debounce 
+  //    previousMillisDebounce = currentMillis;
+  //    EncoderSwitch_flag = !EncoderSwitch_flag;
+  //    LaserOn_flag = true;
+  //    LaserOff_flag = true;
+  //  }
+  //}
 
   if (digitalRead(StartKey) == LOW) {
     StartKey_flag = true;
@@ -257,12 +248,10 @@ void loop() {
   }
 
 
-  // Pourcentage
   if (Percent_flag == true) {
-    Percent = encoderValue * 2;
+    Percent = Ra1->GetCurrentValue();
+    
     if (PercentTemp != Percent) {                                   // on doit afficher le %
-      RotaryInUse_flag = true;                                      // on bloque la lecture de la température car rotary en fonctionnement, 
-      previousMillisRotary = millis();                              // raz
 
       lcd.setCursor(11, 1);
       if (Percent > 99) {
@@ -275,15 +264,18 @@ void loop() {
       }
 
       PercentTemp = Percent;
-    } else if ((millis() - previousMillisRotary) >= 1000) {         // on rend la permission d'afficher la température après un sec d'incativité du rotary
-      RotaryInUse_flag = false;
     }
   }
 
+/////////////////////////////////////////////////////////////////////////////
+// Reading and display laser temperature
+/////////////////////////////////////////////////////////////////////////////
   Th1->ReadTemperatureAsync();
-  if (Th1->DataReady && Th1->DataChanged && (Temperature_flag == true)) {
+  if (Th1->DataReady && Th1->DataChanged && (Temperature_flag)) {
     DisplayTemperature(Th1->Temperature);
   }
+
+
 
 
 
@@ -362,28 +354,7 @@ void LcdGrblMenu() {
 }
 
 
-//// DS18S20 Mesure de la température 
-//float GetTemperature(int sensorId, int delayBetweenRead) {
-//  if (sensorId < 0 || sensorId>1) {
-//    sensorId = 0;
-//  }
-//  if (delayBetweenRead < 1000 || delayBetweenRead > 100000) {
-//    delayBetweenRead = 1200;
-//  }
-//
-//  static unsigned long PreviousReadTime;
-//  unsigned long CurrentTime = millis();
-//  unsigned long DeltaTime = CurrentTime - PreviousReadTime;
-//
-//  if (DeltaTime >= delayBetweenRead) {
-//    PreviousReadTime = CurrentTime;
-//    sensors.requestTemperatures();                                  // Send the command to get temperatures
-//    return sensors.getTempCByIndex(sensorId);
-//  }
-//}
-
-
-// DS18S20 Affichage de la température   
+// Affichage de la température   
 void DisplayTemperature(float temperature) {
   lcd.setCursor(10, 0);
   lcd.print(temperature, 2);
@@ -406,20 +377,20 @@ void PWMstop() {
 
 
 //Rotary Encoder
-void GetEncoderValue() {
-  int MSB = digitalRead(encoderPin1);                               // MSB = most significant bit
-  int LSB = digitalRead(encoderPin2);                               // LSB = least significant bit
-  int encoded = (MSB << 1) | LSB;                                    // converting the 2 pin value to single number
-  int sum = (lastEncoded << 2) | encoded;                          // adding it to the previous encoded value
-  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValue++;
-  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValue--;
-  lastEncoded = encoded;                                            // store this value for next time
-  if (encoderValue >= 50) {
-    encoderValue = 50;
-  } else if (encoderValue <= 0) {
-    encoderValue = 0;
-  }
-}
+//void GetEncoderValue() {
+//  int MSB = digitalRead(encoderPin1);                               // MSB = most significant bit
+//  int LSB = digitalRead(encoderPin2);                               // LSB = least significant bit
+//  int encoded = (MSB << 1) | LSB;                                    // converting the 2 pin value to single number
+//  int sum = (lastEncoded << 2) | encoded;                          // adding it to the previous encoded value
+//  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValue++;
+//  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValue--;
+//  lastEncoded = encoded;                                            // store this value for next time
+//  if (encoderValue >= 50) {
+//    encoderValue = 50;
+//  } else if (encoderValue <= 0) {
+//    encoderValue = 0;
+//  }
+//}
 
 
 void GetRotarySwitch() {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -29,6 +31,7 @@ public:
 
   void SetResolution(byte resolution);
   byte GetResolution();
-  void Thermometre::ReadTemperatureAsync();
+  void ReadTemperatureAsync();
+  float ReadTemperature();
 };
 

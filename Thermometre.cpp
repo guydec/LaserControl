@@ -1,5 +1,7 @@
 #include "Thermometre.h"
 
+#define DELAY_NOT_EXPIRED(S, D) ((millis()-S) < D)
+
 #pragma region --- Constructors ---
 Thermometre::Thermometre() {
   Serial.write("Building thermometre\n");
@@ -54,15 +56,13 @@ byte Thermometre::GetResolution() {
 void Thermometre::ReadTemperatureAsync() {
 
   if (ReadingTemperature) {
-    if ((millis() - StartReading) < DelayToHaveValidData) {
+    if (DELAY_NOT_EXPIRED(StartReading, DelayToHaveValidData)) {
       return;
     }
     if (Dallas->isConversionAvailable(DS18Sensor)) {
       OldTemperature = Temperature;
       Temperature = Dallas->getTempC(DS18Sensor);
-      if (OldTemperature != Temperature) {
-        DataChanged = true;
-      }
+      DataChanged = (OldTemperature != Temperature);
       //Serial.println(Temperature);
       DataReady = true;
       ReadingTemperature = false;
@@ -79,4 +79,16 @@ void Thermometre::ReadTemperatureAsync() {
   DataReady = false;
   return;
 }
+
+float Thermometre::ReadTemperature() {
+  Dallas->setWaitForConversion(true);
+  Dallas->setCheckForConversion(true);
+  Dallas->requestTemperaturesByAddress(DS18Sensor);
+
+  OldTemperature = Temperature;
+  Temperature = Dallas->getTempC(DS18Sensor);
+  DataChanged = (OldTemperature != Temperature);
+  return Temperature;
+}
+  
 

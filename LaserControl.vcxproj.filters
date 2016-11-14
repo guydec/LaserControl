@@ -24,9 +24,15 @@
     <ClInclude Include="Thermometre.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RotaryActuator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Thermometre.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RotaryActuator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
