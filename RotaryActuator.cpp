@@ -24,7 +24,6 @@ void RotaryActuator::Initialize(int pin1, int pin2, int pin_Button) {
   InitPinInputHigh(Pin_Button);
   Step = 1;
 }
-
 void RotaryActuator::InitPinInputHigh(int pin) {
   pinMode(pin, INPUT);
   digitalWrite(pin, HIGH);
@@ -33,31 +32,41 @@ void RotaryActuator::InitPinInputHigh(int pin) {
 void RotaryActuator::SetMinValue(int value) {
   MinValue = value;
 }
+int RotaryActuator::GetMinValue() {
+  return MinValue;
+}
 
 void RotaryActuator::SetMaxValue(int value) {
   MaxValue = value;
-}
-
-void RotaryActuator::SetCurrentValue(int value) {
-  CurrentValue = value;
-}
-
-int RotaryActuator::GetMinValue() {
-  return MinValue;
 }
 int RotaryActuator::GetMaxValue() {
   return MaxValue;
 }
 
 void RotaryActuator::SetStep(int value) {
+  if (value < 1) {
+    return;
+  }
+  if (value > (MaxValue - MinValue)) {
+    return;
+  }
   Step = value;
 }
-
 int RotaryActuator::GetStep() {
   return Step;
 }
 
-
+void RotaryActuator::SetCurrentValue(int value) {
+  if (value < MinValue) {
+    CurrentValue = MinValue;
+    return;
+  }
+  if (value > MaxValue) {
+    CurrentValue = MaxValue;
+    return;
+  }
+  CurrentValue = value;
+}
 int RotaryActuator::GetCurrentValue() {
 
   int MSB = digitalRead(Pin1);                               // MSB = most significant bit
@@ -79,18 +88,17 @@ int RotaryActuator::GetCurrentValue() {
 }
 
 int RotaryActuator::IncreaseValue(int value) {
-  Serial.print(">>");
-  Serial.println(value);
+  //Serial.print(">>");
+  //Serial.println(value);
   value += Step;
   if (value > MaxValue) {
     return MaxValue;
   }
   return value;
 }
-
 int RotaryActuator::DecreaseValue(int value) {
-  Serial.print("<<");
-  Serial.println(value);
+  //Serial.print("<<");
+  //Serial.println(value);
   value -= Step;
   if (value < MinValue) {
     return MinValue;
