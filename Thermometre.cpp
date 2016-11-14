@@ -1,5 +1,6 @@
 #include "Thermometre.h"
 
+#pragma region Constructors
 Thermometre::Thermometre() {
   Serial.write("Building thermometre\n");
   OneWireBus = new OneWire(13);
@@ -16,6 +17,7 @@ Thermometre::~Thermometre() {
   delete Dallas;
   delete OneWireBus;
 }
+#pragma endregion
 
 void Thermometre::Initialize() {
   Serial.write("Initialize thermometre\n");
