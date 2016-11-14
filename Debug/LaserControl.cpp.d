@@ -13,7 +13,8 @@ C:\Users\bollylu.NEWNET\AppData\Local\Temp\VMicroBuilds\LaserControl\uno\LaserCo
  C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\variants\standard/pins_arduino.h \
  C:\Program\ Files\ (x86)\Arduino\libraries\LiquidCrystal\src/LiquidCrystal.h \
  C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\cores\arduino/Print.h \
+ C:\Users\bollylu.NEWNET\AppData\Local\Temp\VMicroBuilds\LaserControl\uno\Thermometre.h \
  c:\dev.arduino\libraries\OneWire/OneWire.h \
  C:\Program\ Files\ (x86)\Arduino\hardware\arduino\avr\cores\arduino/Arduino.h \
  c:\dev.arduino\libraries\DallasTemperature/DallasTemperature.h \
- C:\Program\ Files\ (x86)\Microsoft\ Visual\ Studio\ 14.0\Common7\IDE\Extensions\ivdu4zkt.yt0\Micro\ Platforms\default\debuggers\VM_DBG/VM_DBG.h
+ C:\Program\ Files\ (x86)\Microsoft\ Visual\ Studio\ 14.0\Common7\IDE\Extensions\2hjkg2za.ngi\Micro\ Platforms\default\debuggers\VM_DBG/VM_DBG.h

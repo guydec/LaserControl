@@ -27,5 +27,13 @@
     <ClInclude Include="Rotary encoder + button.txt">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Thermometre.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Thermometre.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

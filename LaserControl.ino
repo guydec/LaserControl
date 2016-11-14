@@ -26,9 +26,7 @@
 //                                                LIBRARIES
 // ------------------------------------------------------------------------------------------------------------
 #include <LiquidCrystal.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-
+#include "Thermometre.h"
 
 // ------------------------------------------------------------------------------------------------------------
 //                                            PIN ASSIGNATION
@@ -47,7 +45,7 @@
 #define   LaserOut       10                                         // Timer 1 "B" output: OC1B
 //         libre ...        11
 #define   SpindleEnable  12
-#define   OneWireBus     13
+#define   PIN_ONEWIRE_BUS 13
 
 //         ANALOGIQUE ----------
 #define   lcdD4          14
@@ -66,9 +64,8 @@
 // ------------------------------------------------------------------------------------------------------------
 //                                              Variables
 // ------------------------------------------------------------------------------------------------------------
-OneWire oneWire(OneWireBus);
-DallasTemperature sensors(&oneWire);
-DeviceAddress DS18sensor1;
+Thermometre* Th1;
+
 LiquidCrystal lcd(lcdRS, lcdEN, lcdD4, lcdD5, lcdD6, lcdD7);
 
 
@@ -113,6 +110,11 @@ volatile long   encoderValue = 0;
 //                                                 SETUP
 // ------------------------------------------------------------------------------------------------------------
 void setup() {
+  Serial.begin(115200);
+  Serial.write("setup...");
+
+  Th1 = new Thermometre(PIN_ONEWIRE_BUS);
+
   // pinMode INPUT   
   pinMode(encoderSwitch, INPUT);
   pinMode(SpindleEnable, INPUT);
@@ -168,29 +170,17 @@ void setup() {
   };
   lcd.createChar(2, degres);
 
-
   // Initialisations   
   lcd.begin(16, 2);
-  sensors.begin();
-  sensors.getAddress(DS18sensor1, 0);      // search for devices on the bus and assign based on an index
-  sensors.setHighAlarmTemp(DS18sensor1, TEMPERATURE_ALARM);
-  sensors.setResolution(10);  // 9 bits	0.5°C	93.75 ms     10 bits	0.25°C	187.5 ms     11 bits	0.125°C	375 ms     12 bits 	0.0625°C	750 ms
-
-
-// Other   
   lcd.home();
   lcd.clear();
+
+  Th1->SetResolution(12);
+
   currentMillis = millis();
   previousMillis = millis();
 
-
-
-  Serial.begin(9600);
-  PrintAlarms(DS18sensor1);
-
-
-
-
+  
 
 }
 
@@ -202,8 +192,7 @@ void setup() {
 void loop() {
 
   // Variables dont la portée est loop()
-  float Temperature = 0;
-
+  //float Temperature = 0;
 
   // Lecture des entrées
   if (digitalRead(encoderSwitch) == LOW) {
@@ -291,20 +280,9 @@ void loop() {
     }
   }
 
-
-  //Température
-  if ((Temperature_flag == true) && (RotaryInUse_flag == false)) {
-    Temperature = GetTemperature((int)DS18sensor1, DELAY_READING_TEMPERATURE);
-
-
-
-    //checkAlarm(DS18sensor1);
-    //delay(2000);
-
-
-    //else { 
-    DisplayTemperature(Temperature);
-    //}
+  Th1->ReadTemperatureAsync();
+  if (Th1->DataReady && Th1->DataChanged && (Temperature_flag == true)) {
+    DisplayTemperature(Th1->Temperature);
   }
 
 
@@ -384,31 +362,31 @@ void LcdGrblMenu() {
 }
 
 
-// DS18S20 Mesure de la température 
-float GetTemperature(int sensorId, int delayBetweenRead) {
-  if (sensorId < 0 || sensorId>1) {
-    sensorId = 0;
-  }
-  if (delayBetweenRead < 1000 || delayBetweenRead > 100000) {
-    delayBetweenRead = 1200;
-  }
-
-  static unsigned long PreviousReadTime;
-  unsigned long CurrentTime = millis();
-  unsigned long DeltaTime = CurrentTime - PreviousReadTime;
-
-  if (DeltaTime >= delayBetweenRead) {
-    PreviousReadTime = CurrentTime;
-    sensors.requestTemperatures();                                  // Send the command to get temperatures
-    return sensors.getTempCByIndex(sensorId);
-  }
-}
+//// DS18S20 Mesure de la température 
+//float GetTemperature(int sensorId, int delayBetweenRead) {
+//  if (sensorId < 0 || sensorId>1) {
+//    sensorId = 0;
+//  }
+//  if (delayBetweenRead < 1000 || delayBetweenRead > 100000) {
+//    delayBetweenRead = 1200;
+//  }
+//
+//  static unsigned long PreviousReadTime;
+//  unsigned long CurrentTime = millis();
+//  unsigned long DeltaTime = CurrentTime - PreviousReadTime;
+//
+//  if (DeltaTime >= delayBetweenRead) {
+//    PreviousReadTime = CurrentTime;
+//    sensors.requestTemperatures();                                  // Send the command to get temperatures
+//    return sensors.getTempCByIndex(sensorId);
+//  }
+//}
 
 
 // DS18S20 Affichage de la température   
 void DisplayTemperature(float temperature) {
-  lcd.setCursor(11, 0);
-  lcd.print(temperature, 1);
+  lcd.setCursor(10, 0);
+  lcd.print(temperature, 2);
 }
 
 
@@ -461,22 +439,21 @@ void Beep(int Repeat) {
 
 
 void PrintAlarms(DeviceAddress deviceAddress) {
-  char temp;
-  temp = sensors.getHighAlarmTemp(deviceAddress);
-  Serial.print("High Alarm: ");
-  Serial.print(temp, DEC);
-  Serial.print("C");
+  //char temp;
+  //temp = sensors.getHighAlarmTemp(deviceAddress);
+  //Serial.print("High Alarm: ");
+  //Serial.print(temp, DEC);
+  //Serial.print("C");
 }
 
 
 
 
 
-void checkAlarm(DeviceAddress deviceAddress)
-{
-  if (sensors.hasAlarm(deviceAddress)) {
-    lcd.print("ALARM: ");
-  }
+void checkAlarm(DeviceAddress deviceAddress) {
+  //if (sensors.hasAlarm(deviceAddress)) {
+  //  lcd.print("ALARM: ");
+  //}
 }
 
 
