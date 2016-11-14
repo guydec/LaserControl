@@ -1,6 +1,12 @@
-__vm/
-Debug/
-.vs/
+/__vm/
+/Debug/
+/.vs/
+
+*.elf
+*.hex
+*.d
+*.buildinfo
+*.vmps.xml
 
 *.suo
 *.user
