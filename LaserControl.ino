@@ -34,7 +34,7 @@
 // ------------------------------------------------------------------------------------------------------------
 //         DIGITAL -----------
 //         libre ...         0
-#define   PIN_ENCODER_BUTTON   1                                         // push button switch
+#define   PIN_ENCODER_BUTTON   8                                         // push button switch
 #define   PIN_ENCODER1         2
 #define   PIN_ENCODER2         3                                         // .. 2/3 are special pins
 #define   Relay           4
@@ -107,13 +107,15 @@ unsigned long   previousMillisRotary = 0;
 unsigned long   previousMillisDebounce;
 volatile long   encoderValue = 0;
 
+bool LaserStatus = false;
+bool OldLaserStatus = false;
 
 // ------------------------------------------------------------------------------------------------------------
 //                                                 SETUP
 // ------------------------------------------------------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
-  Serial.write("setup...");
+  Serial.println("setup...");
 
   Th1 = new Thermometre(PIN_ONEWIRE_BUS);
   Th1->SetResolution(12);
@@ -122,10 +124,12 @@ void setup() {
   Ra1->SetMinValue(0);
   Ra1->SetMaxValue(100);
   Ra1->SetStep(2);
+  Ra1->DebouceDelayForButton = 1;
+  Ra1->ResetButtonStatus();
 
   // pinMode INPUT   
   pinMode(SpindleEnable, INPUT);
-  pinMode(StepperEnable, INPUT);
+  //pinMode(StepperEnable, INPUT);
   pinMode(StartKey, INPUT);
   pinMode(FeedHold, INPUT);
 
@@ -186,16 +190,7 @@ void setup() {
 void loop() {
 
   // Lecture des entrées
-  //if (digitalRead(encoderSwitch) == LOW) {
-  //  currentMillis = millis();
-  //  if ((currentMillis - previousMillisDebounce) >= 200) {          // debounce 
-  //    previousMillisDebounce = currentMillis;
-  //    EncoderSwitch_flag = !EncoderSwitch_flag;
-  //    LaserOn_flag = true;
-  //    LaserOff_flag = true;
-  //  }
-  //}
-
+  
   if (digitalRead(StartKey) == LOW) {
     StartKey_flag = true;
   }
@@ -204,11 +199,7 @@ void loop() {
     SpindleEnable_flag = true;
   }
 
-  if (digitalRead(StepperEnable) == HIGH) {
-    StepperEnable_flag = true;
-  }
-
-  // Menu Acceuil   
+  // Menu Accueil   
   if (LcdAccueilMenu_flag == true) {
     LcdAccueilMenu();
     LcdAccueilMenu_flag = false;
@@ -216,6 +207,7 @@ void loop() {
     LcdStartMenu_flag = true;
   }
 
+  
 
   // Menu Start   
   if (LcdStartMenu_flag == true) {
@@ -267,6 +259,13 @@ void loop() {
     }
   }
 
+  if (Ra1->ButtonPushedThenReleased()) {
+    Serial.println("changing laser status");
+    OldLaserStatus = LaserStatus;
+    LaserStatus = !LaserStatus;
+  }
+  
+
 /////////////////////////////////////////////////////////////////////////////
 // Reading and display laser temperature
 /////////////////////////////////////////////////////////////////////////////
@@ -275,27 +274,20 @@ void loop() {
     DisplayTemperature(Th1->Temperature);
   }
 
-
-
-
-
   // Laser   
-  if (Laser_flag == true) {                                          // autorise la routine
+  if (LaserStatus != OldLaserStatus) {
     lcd.setCursor(6, 0);
-    if (EncoderSwitch_flag == true) {
-      if (LaserOn_flag == true) {
-        Beep(2);
-        lcd.print("on ");
-        LaserOn_flag = false;
-      }
+    if (LaserStatus) {
+      //Beep(2);
+      lcd.print("on ");
     } else {
-      if (LaserOff_flag == true) {
-        Beep(0);
-        lcd.print("off");
-        LaserOff_flag = false;
-      }
+      //Beep(0);
+      lcd.print("off");
     }
+    
   }
+
+  //Ra1->GetButtonStatus();
 
 
 

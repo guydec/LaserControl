@@ -2,15 +2,31 @@
 
 #include <Arduino.h>
 
+#define DELAY_NOT_EXPIRED(S, D) ((millis()-S) < D)
+
 class RotaryActuator {
 
-private:
-  int MinValue;
-  int MaxValue;
-  int CurrentValue;
-  int LastFullValue;
+public:
+  enum class EButtonStatus {
+    Unknown,
+    Released,
+    Pushed
+  };
 
-  bool ButtonPushed;
+private:
+  int _Pin1;
+  int _Pin2;
+  int _Pin_Button;
+
+  int _MinValue;
+  int _MaxValue;
+  int _CurrentValue;
+  int _LastFullValue;
+  long _StartReadingButtonStatus;
+  EButtonStatus _LastButtonStatus;
+  bool _IsButtonStatusChanged;
+
+  EButtonStatus _ButtonStatus;
 
   void Initialize(int pin1, int pin2, int pin_Button);
   void InitPinInputHigh(int pin);
@@ -20,9 +36,7 @@ private:
   int Step;
 
 public:
-  int Pin1;
-  int Pin2;
-  int Pin_Button;
+  long DebouceDelayForButton = 200;
 
   RotaryActuator();
   RotaryActuator(int pin1, int pin2, int pin_Button);
@@ -38,10 +52,10 @@ public:
   void SetStep(int value);
   int GetStep();
   
-  //bool IsButtonPushed(); // Changed from up to down
-  //bool IsButtonReleased(); // Changed from down to up
-  //bool ButtonStatus();  // true = up, false = down
-  //bool ResetButtonPushed(); // Reset status to up
+  EButtonStatus GetButtonStatus(bool forceRead = false);
+  void ResetButtonStatus();
+  bool IsButtonStatusChanged();
+  bool ButtonPushedThenReleased();
 
 };
 
